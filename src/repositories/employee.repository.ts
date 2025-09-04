@@ -3,6 +3,7 @@ import {
   Employee,
   CreateEmployeeDto,
   DeleteEmployeeDto,
+  PaginationDto,
 } from '../types/employee';
 import {
   DuplicateEmailError,
@@ -14,6 +15,8 @@ import {
 export interface IEmployeeRepository {
   create(employeeData: CreateEmployeeDto): Promise<Employee>;
   delete(employeeData: DeleteEmployeeDto): Promise<Employee>;
+  getEmployees(pagination: PaginationDto): Promise<Employee[]>;
+  getTotalCount(): number;
   existsByEmail(email: string): Promise<boolean>;
 }
 
@@ -66,6 +69,16 @@ export class InMemoryEmployeeRepository implements IEmployeeRepository {
     return employee;
   }
 
+  async getEmployees(pagination: PaginationDto): Promise<Employee[]> {
+    const allEmployees = Array.from(this.employees.values());
+
+    const { page, limit } = pagination;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    return allEmployees.slice(startIndex, endIndex).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
   async existsByEmail(email: string): Promise<boolean> {
     return this.emailIndex.has(email);
   }
@@ -75,7 +88,7 @@ export class InMemoryEmployeeRepository implements IEmployeeRepository {
     this.emailIndex.clear();
   }
 
-  getCount(): number {
+  getTotalCount(): number {
     return this.employees.size;
   }
 }

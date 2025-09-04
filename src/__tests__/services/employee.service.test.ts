@@ -208,4 +208,53 @@ describe('EmployeeService', () => {
       await expect(service.deleteEmployee(deleteEmployeeData)).rejects.toThrow(ValidationError);
     });
   });
+
+  describe('getEmployees', () => {
+    it('should throw ValidationError if pagination limit is less than 1', async () => {
+      await expect(service.getEmployees({ page: 1, limit: -1 })).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError if pagination limit is greater than 100', async () => {
+      await expect(service.getEmployees({ page: 1, limit: 101 })).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError if pagination page is less than 1', async () => {
+      await expect(service.getEmployees({ page: 0, limit: 10 })).rejects.toThrow(ValidationError);
+    });
+
+    it('returns the correct employees with pagination', async () => {
+
+      const employee1Data: CreateEmployeeDto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+      };
+
+      const employee2Data: CreateEmployeeDto = {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'jane.doe@example.com',
+      };
+
+      await service.createEmployee(employee1Data);
+      await service.createEmployee(employee2Data);
+
+      const employeesResponse = await service.getEmployees({ page: 1, limit: 10 });
+      expect(employeesResponse).toBeDefined();
+      const employees = employeesResponse.data;
+      expect(employees.length).toBe(2);
+      expect(employees[0].firstName).toBe(employee1Data.firstName);
+      expect(employees[0].lastName).toBe(employee1Data.lastName);
+      expect(employees[0].email).toBe(employee1Data.email);
+      expect(employees[1].firstName).toBe(employee2Data.firstName);
+      expect(employees[1].lastName).toBe(employee2Data.lastName);
+      expect(employees[1].email).toBe(employee2Data.email);
+      expect(employeesResponse.pagination.page).toBe(1);
+      expect(employeesResponse.pagination.limit).toBe(10);
+      expect(employeesResponse.pagination.total).toBe(2);
+      expect(employeesResponse.pagination.totalPages).toBe(1);
+      expect(employeesResponse.pagination.hasNext).toBe(false);
+      expect(employeesResponse.pagination.hasPrev).toBe(false);
+    });
+  });
 });

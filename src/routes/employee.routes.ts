@@ -6,6 +6,9 @@ export function createEmployeeRoutes(
 ): Router {
   const router = Router();
 
+  router.get('/', async (req: Request, res: Response) => {
+    await employeeController.getEmployees(req, res);
+  });
   router.post('/', async (req: Request, res: Response) => {
     await employeeController.createEmployee(req, res);
   });

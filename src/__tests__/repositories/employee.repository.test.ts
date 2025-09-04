@@ -1,5 +1,5 @@
 import { InMemoryEmployeeRepository } from '../../repositories/employee.repository';
-import { CreateEmployeeDto, DeleteEmployeeDto, Employee } from '../../types/employee';
+import { CreateEmployeeDto, DeleteEmployeeDto, Employee, PaginationDto } from '../../types/employee';
 import { DuplicateEmailError, EmployeeEmailNotFoundError, EmployeeNotFoundError } from '../../types/errors';
 
 describe('InMemoryEmployeeRepository', () => {
@@ -109,6 +109,129 @@ describe('InMemoryEmployeeRepository', () => {
         });
         it('should throw EmployeeEmailNotFoundError when deleting an employee with invalid email', async () => {
             await expect(repository.delete({ email: 'invalid-email' })).rejects.toThrow(EmployeeEmailNotFoundError);
+        });
+    });
+
+    describe('getEmployees', () => {
+
+        let pagination: PaginationDto = { page: 1, limit: 10 };
+        it('should return empty array when no employees are present', async () => {
+            const employees = await repository.getEmployees(pagination);
+            expect(employees).toBeDefined();
+            expect(employees.length).toBe(0);
+        });
+
+        it('should return all employees', async () => {
+            const employee1Data: CreateEmployeeDto = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'get.john.doe@example.com',
+            };
+
+            const employee2Data: CreateEmployeeDto = {
+                firstName: 'Jane',
+                lastName: 'Doe',
+                email: 'get.jane.doe@example.com',
+            };
+            await repository.create(employee1Data);
+            await repository.create(employee2Data);
+
+
+
+            const employees = await repository.getEmployees(pagination);
+            expect(employees).toBeDefined();
+            expect(employees.length).toBe(2);
+            expect(employees[0].firstName).toBe(employee1Data.firstName);
+            expect(employees[0].lastName).toBe(employee1Data.lastName);
+            expect(employees[0].email).toBe(employee1Data.email);
+            expect(employees[1].firstName).toBe(employee2Data.firstName);
+            expect(employees[1].lastName).toBe(employee2Data.lastName);
+            expect(employees[1].email).toBe(employee2Data.email);
+        });
+
+        it('should return the correct employees with pagination', async () => {
+            pagination = { page: 2, limit: 1 };
+            const employee1Data: CreateEmployeeDto = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'get.john.doe@example.com',
+            };
+
+            const employee2Data: CreateEmployeeDto = {
+                firstName: 'Jane',
+                lastName: 'Doe',
+                email: 'get.jane.doe@example.com',
+            };
+
+            await repository.create(employee1Data);
+            await repository.create(employee2Data);
+
+            const employees = await repository.getEmployees(pagination);
+            expect(employees).toBeDefined();
+            expect(employees.length).toBe(1);
+            expect(employees[0].firstName).toBe(employee2Data.firstName);
+            expect(employees[0].lastName).toBe(employee2Data.lastName);
+            expect(employees[0].email).toBe(employee2Data.email);
+        });
+
+        it('should return the correct number of employees', async () => {
+            pagination = { page: 1, limit: 2 };
+            const employee1Data: CreateEmployeeDto = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'get.john.doe@example.com',
+            };
+
+            const employee2Data: CreateEmployeeDto = {
+                firstName: 'Jane',
+                lastName: 'Doe',
+                email: 'get.jane.doe@example.com',
+            };
+
+            const employee3Data: CreateEmployeeDto = {
+                firstName: 'Sam',
+                lastName: 'Smith',
+                email: 'get.sam.smith@example.com',
+            };
+
+            await repository.create(employee1Data);
+            await repository.create(employee2Data);
+            await repository.create(employee3Data);
+
+            const employees = await repository.getEmployees(pagination);
+            expect(employees).toBeDefined();
+            expect(employees.length).toBe(2);
+            expect(employees[0].firstName).toBe(employee1Data.firstName);
+            expect(employees[0].lastName).toBe(employee1Data.lastName);
+            expect(employees[0].email).toBe(employee1Data.email);
+            expect(employees[1].firstName).toBe(employee2Data.firstName);
+            expect(employees[1].lastName).toBe(employee2Data.lastName);
+            expect(employees[1].email).toBe(employee2Data.email);
+        });
+
+        it('should return the correct employees after deletion', async () => {
+            const employee1Data: CreateEmployeeDto = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'get.john.doe@example.com',
+            };
+
+            const employee2Data: CreateEmployeeDto = {
+                firstName: 'Jane',
+                lastName: 'Doe',
+                email: 'get.jane.doe@example.com',
+            };
+            await repository.create(employee1Data);
+            await repository.create(employee2Data);
+
+            await repository.delete({ email: employee1Data.email });
+
+            const employees = await repository.getEmployees(pagination);
+            expect(employees).toBeDefined();
+            expect(employees.length).toBe(1);
+            expect(employees[0].firstName).toBe(employee2Data.firstName);
+            expect(employees[0].lastName).toBe(employee2Data.lastName);
+            expect(employees[0].email).toBe(employee2Data.email);
         });
     });
 });

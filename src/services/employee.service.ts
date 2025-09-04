@@ -2,6 +2,8 @@ import {
   Employee,
   CreateEmployeeDto,
   DeleteEmployeeDto,
+  PaginationDto,
+  PaginatedResponse,
 } from '../types/employee';
 import { IEmployeeRepository } from '../repositories/employee.repository';
 import { ValidationError } from '../types/errors';
@@ -19,8 +21,41 @@ export class EmployeeService {
     return this.employeeRepository.delete(employeeData);
   }
 
-  async employeeExistsByEmail(email: string): Promise<boolean> {
-    return this.employeeRepository.existsByEmail(email);
+  async getEmployees(pagination: PaginationDto): Promise<PaginatedResponse<Employee>> {
+    this.validatePaginationData(pagination);
+
+    const employees = await this.employeeRepository.getEmployees(pagination);
+    const total = this.employeeRepository.getTotalCount();
+
+    const { page, limit } = pagination;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: employees,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    };
+  }
+
+  private validatePaginationData(pagination: PaginationDto): void {
+
+    if (!pagination.page || !pagination.limit) {
+      throw new ValidationError('Page and limit are required');
+    }
+
+    if (pagination.page < 1) {
+      throw new ValidationError('Page must be greater than 0');
+    }
+
+    if (pagination.limit < 1 || pagination.limit > 100) {
+      throw new ValidationError('Limit must be between 1 and 100');
+    }
   }
 
   private validateCreateEmployeeData(data: CreateEmployeeDto): void {
@@ -44,6 +79,7 @@ export class EmployeeService {
       throw new ValidationError('Invalid email format');
     }
   }
+
   private validateDeleteEmployeeData(data: DeleteEmployeeDto): void {
     if (
       (!data.email || data.email.trim().length === 0) &&
