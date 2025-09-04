@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { EmployeeController } from './controllers/employee.controller';
+import { EmployeeService } from './services/employee.service';
+import { InMemoryEmployeeRepository } from './repositories/employee.repository';
+import { createEmployeeRoutes } from './routes/employee.routes';
 import { AppError } from './types/errors';
 
 export class App {
@@ -23,7 +27,6 @@ export class App {
       credentials: true,
     }));
 
-
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -42,6 +45,12 @@ export class App {
       });
     });
 
+
+    const employeeRepository = new InMemoryEmployeeRepository();
+    const employeeService = new EmployeeService(employeeRepository);
+    const employeeController = new EmployeeController(employeeService);
+
+    this.app.use('/api/employees', createEmployeeRoutes(employeeController));
 
     this.app.use('*', (req, res) => {
       res.status(404).json({
