@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { EmployeeService } from '../services/employee.service';
-import { Employee, CreateEmployeeDto, ApiResponse } from '../types/employee';
+import {
+  Employee,
+  CreateEmployeeDto,
+  ApiResponse,
+  DeleteEmployeeDto,
+} from '../types/employee';
 import { AppError, ValidationError } from '../types/errors';
 
 export class EmployeeController {
@@ -14,10 +19,28 @@ export class EmployeeController {
       const response: ApiResponse<Employee> = {
         success: true,
         data: employee,
-        message: 'Employee created successfully',
+        message: `Employee created successfully: ${employee.firstName} ${employee.lastName}`,
       };
 
       res.status(201).json(response);
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async deleteEmployee(req: Request, res: Response): Promise<void> {
+    try {
+      const deleteEmployeeData: DeleteEmployeeDto = req.body;
+      const employee =
+        await this.employeeService.deleteEmployee(deleteEmployeeData);
+
+      const response: ApiResponse<Employee> = {
+        success: true,
+        data: employee,
+        message: `Employee deleted successfully: ${employee.firstName} ${employee.lastName}`,
+      };
+
+      res.status(200).json(response);
     } catch (error) {
       this.handleError(error, res);
     }

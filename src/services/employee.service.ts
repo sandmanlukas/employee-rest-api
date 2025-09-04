@@ -1,4 +1,8 @@
-import { Employee, CreateEmployeeDto } from '../types/employee';
+import {
+  Employee,
+  CreateEmployeeDto,
+  DeleteEmployeeDto,
+} from '../types/employee';
 import { IEmployeeRepository } from '../repositories/employee.repository';
 import { ValidationError } from '../types/errors';
 
@@ -8,6 +12,11 @@ export class EmployeeService {
   async createEmployee(employeeData: CreateEmployeeDto): Promise<Employee> {
     this.validateCreateEmployeeData(employeeData);
     return this.employeeRepository.create(employeeData);
+  }
+
+  async deleteEmployee(employeeData: DeleteEmployeeDto): Promise<Employee> {
+    this.validateDeleteEmployeeData(employeeData);
+    return this.employeeRepository.delete(employeeData);
   }
 
   async employeeExistsByEmail(email: string): Promise<boolean> {
@@ -33,6 +42,25 @@ export class EmployeeService {
 
     if (!this.isValidEmail(data.email)) {
       throw new ValidationError('Invalid email format');
+    }
+  }
+  private validateDeleteEmployeeData(data: DeleteEmployeeDto): void {
+    if (
+      (!data.email || data.email.trim().length === 0) &&
+      (!data.id || data.id.trim().length === 0)
+    ) {
+      throw new ValidationError('Email or id is required');
+    }
+
+    if (data.email) {
+      data.email = data.email.trim().toLowerCase();
+      if (!this.isValidEmail(data.email)) {
+        throw new ValidationError('Invalid email format');
+      }
+    }
+
+    if (data.id) {
+      data.id = data.id.trim();
     }
   }
 

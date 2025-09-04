@@ -13,6 +13,11 @@ export interface CreateEmployeeDto {
   email: string;
 }
 
+export interface DeleteEmployeeDto {
+  id?: string;
+  email?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;

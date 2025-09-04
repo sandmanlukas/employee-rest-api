@@ -1,6 +1,6 @@
 import { EmployeeService } from '../../services/employee.service';
 import { InMemoryEmployeeRepository } from '../../repositories/employee.repository';
-import { CreateEmployeeDto } from '../../types/employee';
+import { CreateEmployeeDto, DeleteEmployeeDto, Employee } from '../../types/employee';
 import { ValidationError } from '../../types/errors';
 
 describe('EmployeeService', () => {
@@ -126,6 +126,86 @@ describe('EmployeeService', () => {
       };
 
       await expect(service.createEmployee(employeeData)).rejects.toThrow(ValidationError);
+    });
+  });
+
+  describe('deleteEmployee', () => {
+    let employee: Employee;
+
+    beforeEach(async () => {
+      const employeeData: CreateEmployeeDto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+      };
+      employee = await service.createEmployee(employeeData);
+    });
+
+    it('should delete employee successfully with valid data', async () => {
+      const deletedEmployee = await service.deleteEmployee({ email: employee.email });
+
+      expect(deletedEmployee).toBeDefined();
+      expect(deletedEmployee.id).toBe(employee.id);
+      expect(deletedEmployee.firstName).toBe(employee.firstName);
+      expect(deletedEmployee.lastName).toBe(employee.lastName);
+      expect(deletedEmployee.email).toBe(employee.email);
+    });
+
+    it('should trim whitespace from input data', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {
+        email: ` ${employee.email} `,
+        id: ` ${employee.id} `
+      };
+
+      const deletedEmployee = await service.deleteEmployee(deleteEmployeeData);
+
+      expect(deletedEmployee).toBeDefined();
+      expect(deletedEmployee.id).toBe(employee.id);
+      expect(deletedEmployee.email).toBe(employee.email);
+    });
+
+    it('should convert email to lowercase', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {
+        email: 'JOHN.DOE@EXAMPLE.COM',
+      };
+
+      const deletedEmployee = await service.deleteEmployee(deleteEmployeeData);
+
+      expect(deletedEmployee).toBeDefined();
+      expect(deletedEmployee.email).toBe('john.doe@example.com');
+
+    });
+
+    it('should throw ValidationError if missing email and id', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {};
+
+      await expect(service.deleteEmployee(deleteEmployeeData)).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for invalid email format', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {
+        email: 'invalid-email',
+      };
+
+      await expect(service.deleteEmployee(deleteEmployeeData)).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for email without domain', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {
+        id: employee.id,
+        email: 'john@',
+      };
+
+      await expect(service.deleteEmployee(deleteEmployeeData)).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for email without @ symbol', async () => {
+      const deleteEmployeeData: DeleteEmployeeDto = {
+        id: employee.id,
+        email: 'john.doe.example.com',
+      };
+
+      await expect(service.deleteEmployee(deleteEmployeeData)).rejects.toThrow(ValidationError);
     });
   });
 });

@@ -16,6 +16,11 @@ export class EmployeeNotFoundError extends AppError {
     super(`Employee with id ${id} not found`, 404);
   }
 }
+export class EmployeeEmailNotFoundError extends AppError {
+  constructor(email: string) {
+    super(`Employee with email ${email} not found`, 404);
+  }
+}
 
 export class DuplicateEmailError extends AppError {
   constructor(email: string) {
