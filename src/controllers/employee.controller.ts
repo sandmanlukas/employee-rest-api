@@ -6,7 +6,6 @@ import {
   ApiResponse,
   DeleteEmployeeDto,
   PaginationDto,
-  PaginatedResponse,
 } from '../types/employee';
 import { AppError, ValidationError } from '../types/errors';
 

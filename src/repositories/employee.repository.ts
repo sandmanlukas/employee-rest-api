@@ -76,7 +76,9 @@ export class InMemoryEmployeeRepository implements IEmployeeRepository {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
 
-    return allEmployees.slice(startIndex, endIndex).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return allEmployees
+      .slice(startIndex, endIndex)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   async existsByEmail(email: string): Promise<boolean> {
